@@ -28,15 +28,15 @@ helpers do
   def sort_lists(lists, &block)
     incomplete_lists, complete_lists = lists.partition { |list| list_complete?(list) }
 
-    incomplete_lists.each{ |list| yield(list, lists.index(list))}
     complete_lists.each{ |list| yield(list, lists.index(list))}
+    incomplete_lists.each{ |list| yield(list, lists.index(list))}
   end
 
   def sort_todos(todos, &block)
-    incomplete_todos, complete_todos = todos.partition {|todo| todo[:complete] }
+    incomplete_todos, complete_todos = todos.partition {|todo| todo[:completed] }
 
-    incomplete_todos.each{ |todo| yield(todo, todos.index(todo))}
     complete_todos.each{ |todo| yield(todo, todos.index(todo))}
+    incomplete_todos.each{ |todo| yield(todo, todos.index(todo))}
   end
 end
 
