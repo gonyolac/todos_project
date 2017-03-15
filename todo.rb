@@ -6,6 +6,7 @@ require "tilt/erubis"
 configure do
   enable :sessions
   set :session_secret, 'secret'
+  set :erb, :escape_html => true
 end
 
 helpers do
@@ -37,6 +38,14 @@ helpers do
 
     complete_todos.each{ |todo| yield(todo, todos.index(todo))}
     incomplete_todos.each{ |todo| yield(todo, todos.index(todo))}
+  end
+
+  def load_list(index)
+    list = session[:lists][index] if index
+    return list if list
+
+    session[:fail] = "The specified list was not found."
+    redirect "/lists"
   end
 end
 
@@ -87,7 +96,7 @@ end
 
 get "/lists/:id" do
   @list_id = params[:id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
   erb :current_list
 end
 
@@ -130,7 +139,7 @@ end
 # add new todo to the list
 post "/lists/:list_id/todos" do
   @list_id = params[:list_id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
   todo_name = params[:todo_name].strip
   
   error = error_for_todo(todo_name)
@@ -148,7 +157,7 @@ end
 post "/lists/:list_id/todos/:item/delete" do
   @list_id = params[:list_id].to_i
   @item_id = params[:item].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
 
   @list[:todos].delete_at(@item_id)
   session[:success] = "Todo item has been deleted"
@@ -160,7 +169,7 @@ end
 post "/lists/:list_id/todos/:item/complete" do
   @list_id = params[:list_id].to_i
   @item_id = params[:item].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
   is_completed = params[:completed] == "true"
   @list[:todos][@item_id][:completed] = is_completed
   session[:success] = "Todo list has been updated"
@@ -170,7 +179,7 @@ end
 # complete all todo items from current todo list
 post "/lists/:id/complete_all" do
   @list_id = params[:id].to_i
-  @list = session[:lists][@list_id]
+  @list = load_list(@list_id)
 
   @list[:todos].each {|todo| todo[:completed] = true}
 
